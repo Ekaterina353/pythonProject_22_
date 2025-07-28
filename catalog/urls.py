@@ -1,17 +1,14 @@
+from operator import index
+
 from django.urls import path
 from catalog.apps import CatalogConfig
-from catalog.views import home
-from . import views
-from django.conf import settings
-from django.conf.urls.static import static
+from catalog.views import contacts, product_detail, home, product_list
 
 app_name = CatalogConfig.name
 
 urlpatterns = [
     path('', home, name='home'),
-    path('contacts/', views.contacts, name='contacts'),
+    path('contacts/', contacts, name='contacts'),
+    path('product_list/', product_list, name='product_list'),
+    path('product_detail/<int:pk>/', product_detail, name='product_detail')
 ]
-
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
