@@ -7,7 +7,7 @@ from catalog.models import Product
 def home(request):
     products = Product.objects.all()
     context = {'products': products}
-    return render(request, 'base.html', context=context)
+    return render(request, 'product_list.html', context=context)
 
 
 def contacts(request):
@@ -16,12 +16,6 @@ def contacts(request):
         message = request.POST.get('message')
         return HttpResponse(f"Спасибо, {name}! Ваше сообщение получено.")
     return render(request, 'contacts.html')
-
-
-def product_list(request, pk):
-    products = Product.objects.all()
-    context = {'products': products}
-    return render(request, 'product/product_list.html', context=context)
 
 
 def product_detail(request, pk):
