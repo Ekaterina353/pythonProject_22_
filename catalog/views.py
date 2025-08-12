@@ -8,7 +8,7 @@ from catalog.models import Product
 
 class HomeListView(ListView):
     model = Product
-    template_name = 'catalog/base.html'
+    template_name = 'catalog/home.html'
     context_object_name = 'products'
 
 

@@ -8,9 +8,8 @@ class Blog(models.Model):
     title = models.CharField(max_length=250, verbose_name='название', help_text='Введите название')
     content = models.TextField(verbose_name='содержимое', help_text='Введите содержимое')
     image = models.ImageField(upload_to='blog_image/', blank=True, null=True, verbose_name='фото',
-                              help_text='Загрузити фотографию')
-    created_at = models.DateField(verbose_name='дата создания', help_text='Введите датe создания', blank=True,
-                                  null=True)
+                              help_text='Загрузите фотографию')
+    created_at = models.DateField(auto_now_add=True, verbose_name='дата создания', help_text='Введите дату создания')
     publication_sign = models.BooleanField(default=True)
     count_of_views = models.PositiveIntegerField(verbose_name='Счетчик просмотров', default=0)
 
