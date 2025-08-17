@@ -5,4 +5,4 @@ from .models import Blog
 class BlogForm(forms.ModelForm):
     class Meta:
         model = Blog
-        fields = ['title', 'content', 'image', 'publication_sign']
+        exclude = ("count_of_views",)
