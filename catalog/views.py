@@ -1,4 +1,4 @@
-from django.views.generic import ListView, DetailView, CreateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 from django.views import View
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
@@ -58,7 +58,19 @@ class ProductDeleteView(DeleteView):
     template_name = 'catalog/product_delete.html'
     success_url = reverse_lazy('catalog:home')
 
+
 # def product_detail(request, pk):
 #    product = get_object_or_404(Product, id=pk)
 #    context = {'product': product}
 #    return render(request, 'product_detail.html', context=context)
+
+
+# Добавляем UpdateView для редактирования продукта
+class ProductUpdateView(UpdateView):
+    model = Product
+    form_class = ProductForm
+    template_name = 'catalog/product_form.html'  # Используем ту же форму, что и для создания
+
+    # Определяем success_url.  Можно перенаправлять на страницу детали продукта, например
+    def get_success_url(self):
+        return reverse_lazy('catalog:product_detail', kwargs={'pk': self.object.pk})
