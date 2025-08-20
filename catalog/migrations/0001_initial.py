@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 (
                 'description', models.TextField(help_text='Введите описание', max_length=250, verbose_name='описание')),
                 ('image',
-                 models.ImageField(blank=True, help_text='Загрузити фотографию', null=True, upload_to='media/photo',
+                 models.ImageField(blank=True, help_text='Загрузите фотографию', null=True, upload_to='media/photo',
                                    verbose_name='фото')),
                 ('price', models.CharField(blank=True, help_text='Введите цену', max_length=100, null=True,
                                            verbose_name='Цена')),
