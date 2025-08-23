@@ -1,11 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 from django.views import View
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseForbidden
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
-from forms import ProductForm, Category
-from catalog.models import Product
+from .forms import ProductForm, Category
+from .models import Product
+from django.contrib.auth.decorators import login_required, permission_required
 
 
 class HomeListView(ListView):
@@ -47,6 +48,9 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     template_name = 'catalog/product_form.html'
     success_url = reverse_lazy('catalog:home')
 
+    def form_valid(self, form):  # Переопределение метода для автоматического заполнения owner
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
 class ProductDetailView(LoginRequiredMixin, DetailView):
     model = Product
@@ -75,3 +79,16 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
     # Определяем success_url.  Можно перенаправлять на страницу детали продукта, например
     def get_success_url(self):
         return reverse_lazy('catalog:product_detail', kwargs={'pk': self.object.pk})
+
+    def dispatch(self, request, *args, **kwargs):  # Проверка прав доступа
+        obj = self.get_object()
+        if obj.owner != self.request.user:
+            return HttpResponseForbidden("У вас нет прав на редактирование.")
+        return super().dispatch(request, *args, **kwargs)
+
+@login_required
+def product_unpublish(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    product.is_published = False
+    product.save()
+    return redirect('catalog:home')  # Исправлено: product_list -> catalog:home
