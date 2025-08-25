@@ -1,6 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User, Group, Permission
-from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 
 class Product(models.Model):
@@ -15,9 +14,14 @@ class Product(models.Model):
     created_at = models.DateField(verbose_name='дата создания', help_text='Введите дату создания', blank=True,
                                   null=True)
     updated_at = models.DateTimeField(auto_now=True, verbose_name='дата последнего изменения', blank=True, null=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Владелец')  # Добавлено поле Владелец
     is_published = models.BooleanField(default=False, verbose_name='Опубликовано')  # Добавлено поле Статус публикации
-
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="Владелец",
+        related_name="products",
+        null=True,
+    )
 
     def __str__(self):
         return f'{self.name}'
@@ -26,7 +30,8 @@ class Product(models.Model):
         verbose_name = 'продукт'
         verbose_name_plural = 'продукты'
         permissions = [
-            ("can_unpublish_product", "Can unpublish product"),  # Право на отмену публикации
+            ("can_unpublish_product", "Can unpublish product"),
+            ("remove_any_product", "Remove any product"),
         ]
 
 

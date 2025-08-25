@@ -51,6 +51,18 @@ class ProductForm(forms.ModelForm):
         return image
 
 
+class ProductModeratorForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ["is_available"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-control"
+        self.fields["is_available"].widget.attrs.update({"class": "form-check"})
+
+
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category

@@ -1,12 +1,14 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 from django.views import View
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
-from .forms import ProductForm, Category
+from .forms import ProductForm, Category, ProductModeratorForm
 from .models import Product
 from django.contrib.auth.decorators import login_required, permission_required
+
+from django.core.exceptions import PermissionDenied
 
 
 class HomeListView(ListView):
@@ -52,43 +54,48 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
-class ProductDetailView(LoginRequiredMixin, DetailView):
-    model = Product
-    template_name = 'catalog/product_detail.html'
-    context_object_name = 'product'
-
-
-class ProductDeleteView(LoginRequiredMixin, DeleteView):
-    model = Product
-    template_name = 'catalog/product_delete.html'
-    success_url = reverse_lazy('catalog:home')
-
-
-# def product_detail(request, pk):
-#    product = get_object_or_404(Product, id=pk)
-#    context = {'product': product}
-#    return render(request, 'product_detail.html', context=context)
-
 
 # Добавляем UpdateView для редактирования продукта
 class ProductUpdateView(LoginRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
     template_name = 'catalog/product_form.html'  # Используем ту же форму, что и для создания
+    success_url = reverse_lazy("catalog:home")
 
-    # Определяем success_url.  Можно перенаправлять на страницу детали продукта, например
-    def get_success_url(self):
-        return reverse_lazy('catalog:product_detail', kwargs={'pk': self.object.pk})
+    def get_form_class(self):
+        if self.request.user.is_superuser:
+            return ProductForm
+        if self.request.user.has_perm("catalog.can_unpublish_product"):
+            return ProductModeratorForm
+        if self.request.user.has_perm("catalog.remove_any_product"):
+            return ProductModeratorForm
+        return ProductForm
 
-    def dispatch(self, request, *args, **kwargs):  # Проверка прав доступа
-        obj = self.get_object()
-        if obj.owner != self.request.user:
-            return HttpResponseForbidden("У вас нет прав на редактирование.")
-        return super().dispatch(request, *args, **kwargs)
+    def test_func(self):
+        product = self.get_object()
+        return self.request.user == product.owner or self.request.user.has_perm(
+            "catalog.can_unpublish_product"
+        )
 
-@login_required
-def product_unpublish(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    product.is_published = False
-    product.save()
-    return redirect('catalog:home')  # Исправлено: product_list -> catalog:home
+    def handle_no_permission(self):
+        raise PermissionDenied
+
+
+class ProductDetailView(LoginRequiredMixin, DetailView):
+    model = Product
+    template_name = 'catalog/product_detail.html'
+    context_object_name = 'product'
+
+
+class ProductDeleteView(LoginRequiredMixin,DeleteView):
+    model = Product
+    template_name = 'catalog/product_delete.html'
+    success_url = reverse_lazy('catalog:home')
+
+
+
+
+# def product_detail(request, pk):
+#     product = get_object_or_404(Product, id=pk)
+#     context = {'product': product}
+#     return render(request, 'product_detail.html', context=context)
