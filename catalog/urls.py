@@ -2,7 +2,9 @@ from operator import index
 
 from django.urls import path
 from catalog.apps import CatalogConfig
-from catalog.views import ProductDetailView, CatalogContactsView, HomeListView, ProductCreateView, ProductUpdateView, ProductDeleteView
+from catalog.views import (ProductDetailView, CatalogContactsView, HomeListView, ProductCreateView, ProductUpdateView, ProductDeleteView,
+                           CategoryProductView, CategoryProductDetailView)
+
 
 app_name = CatalogConfig.name
 
@@ -13,4 +15,6 @@ urlpatterns = [
     path('product/create/', ProductCreateView.as_view(), name='product_create'),
     path('product/update/<int:pk>/', ProductUpdateView.as_view(), name='product_update'),  # URL для обновления
     path('product/delete/<int:pk>/', ProductDeleteView.as_view(), name='product_delete'),
+    path('category/', CategoryProductView.as_view(), name='category_list'),
+    path('category/<int:pk>/', CategoryProductDetailView.as_view(), name='category_products'),
 ]
