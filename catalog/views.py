@@ -6,11 +6,15 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from .forms import ProductForm, Category, ProductModeratorForm
 from .models import Product
-from django.contrib.auth.decorators import login_required, permission_required
 
 from django.core.exceptions import PermissionDenied
+from .services import get_products_by_category, CategoryService
 
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 
+# @method_decorator(cache_page(60 * 15), name='dispatch')
 class HomeListView(ListView):
     model = Product
     template_name = 'catalog/home.html'
@@ -86,14 +90,37 @@ class ProductDetailView(LoginRequiredMixin, DetailView):
     template_name = 'catalog/product_detail.html'
     context_object_name = 'product'
 
+    def get_queryset(self):
+        queryset = cache.get('category_queryset')
+        if not queryset:
+            queryset = super().get_queryset()
+            cache.set('category_queryset', queryset, 60 * 15)
+        return queryset
 
-class ProductDeleteView(LoginRequiredMixin,DeleteView):
+
+class ProductDeleteView(LoginRequiredMixin, DeleteView):
     model = Product
     template_name = 'catalog/product_delete.html'
     success_url = reverse_lazy('catalog:home')
 
 
+class CategoryProductDetailView(DetailView):
+    model = Category
+    template_name = 'catalog/base.html'
 
+    def get_context_data(self, **kwargs):
+        # Получаем стандартный контекст данных из родительского класса
+        context = super().get_context_data(**kwargs)
+        # Получаем ID категория из объекта
+        category_id = self.kwargs.get('pk')
+        context['name'] = CategoryService.get_full_name(category_id)
+        context['products'] = Product.objects.filter(category_id=category_id)
+        return context
+
+
+class CategoryProductView(ListView):
+    model = Category
+    template_name = 'catalog/category_products.html'
 
 # def product_detail(request, pk):
 #     product = get_object_or_404(Product, id=pk)
